@@ -1,17 +1,6 @@
-# Pipeline обработки данных HeadHunter
+# Pipeline и регрессия для датасета HeadHunter
 
-Проект для обработки данных из CSV файла с использованием паттерна проектирования "Цепочка ответственности" (Chain of Responsibility).
-
-## Описание
-
-Проект реализует пайплайн обработки данных, который:
-1. Загружает данные из CSV файла
-2. Очищает данные (удаляет дубликаты, лишние колонки)
-3. Обрабатывает пропущенные значения
-4. Кодирует категориальные переменные
-5. Выполняет feature engineering
-6. Разделяет данные на признаки (X) и целевую переменную (y)
-7. Сохраняет результаты в .npy файлы
+Проект: пайплайн обработки hh.csv (Chain of Responsibility) и регрессионная модель для предсказания зарплат. Веса модели хранятся в папке `resources/`.
 
 ## Установка
 
@@ -21,37 +10,71 @@ pip install -r requirements.txt
 
 ## Использование
 
+### 1. Пайплайн (hh.csv → x_data.npy, y_data.npy)
+
+Через единое приложение или отдельный скрипт:
+
 ```bash
 python app.py path/to/hh.csv
+# или
+python run_pipeline.py path/to/hh.csv
 ```
 
-После выполнения рядом с входным файлом будут созданы:
-- `x_data.npy`
-- `y_data.npy`
+Рядом с CSV создаются `x_data.npy` и `y_data.npy`.
 
-## Архитектура
+### 2. Обучение модели
 
-Проект использует паттерн **Chain of Responsibility**, где каждый обработчик:
-- Наследуется от `BaseHandler`
-- Реализует метод `process()` для обработки данных
-- Может передать данные следующему обработчику в цепочке
+На вход — выход пайплайна (директория с `x_data.npy` и `y_data.npy`). Веса сохраняются в `resources/`.
 
-### Обработчики:
+```bash
+python train.py path/to/data_dir
+# или
+python train.py --x path/to/x_data.npy --y path/to/y_data.npy
+```
 
-1. **LoadDataHandler** - загрузка данных из CSV
-2. **CleanDataHandler** - очистка данных
-3. **HandleMissingValuesHandler** - обработка пропущенных значений
-4. **EncodeCategoricalHandler** - кодирование категориальных переменных
-5. **FeatureEngineeringHandler** - создание новых признаков
-6. **SplitDataHandler** - разделение на X и y
-7. **SaveDataHandler** - сохранение в .npy файлы
+Опции: `--alpha` — коэффициент L2-регуляризации Ridge (по умолчанию 1.0).
 
-## Best Practices
+### 3. Предсказание зарплат (приложение)
 
-- Type hints для всех функций
-- Docstrings в формате Google Style
-- Логирование операций
-- Обработка ошибок
-- Разделение ответственности (SRP)
-- PEP 8 стиль кода
-- Модульная структура
+На вход — путь к `x_data.npy`. В stdout выводится список зарплат в рублях (float), в формате JSON.
+
+```bash
+python app.py path/to/x_data.npy
+```
+
+Пример вывода (список float в рублях):
+
+```json
+[0.708, 0.714, 0.710, ...]
+```
+
+Логи пишутся в stderr, в stdout — только JSON-список.
+
+**Единое приложение `app.py`:** по расширению файла выбирается режим: `.csv` — пайплайн, `.npy` — предсказание.
+
+## Структура проекта
+
+```
+Homework-5/
+├── app.py              CLI: python app path/to/x_data.npy → список зарплат (float)
+├── run_pipeline.py     Пайплайн: python run_pipeline.py path/to/hh.csv
+├── train.py            Обучение: python train.py data_dir → веса в resources/
+├── resources/          Веса модели (model.npz) после train.py
+├── model/              Модуль регрессии (Ridge)
+├── pipeline/           Пайплайн Chain of Responsibility
+├── requirements.txt
+└── README.md
+```
+
+## Модель
+
+- **Ridge-регрессия**.
+- Признаки масштабируются.
+- Сохранение/загрузка: `resources/model.npz`.
+
+## Best practices и кодстайл
+
+- Type hints, docstrings
+- Логирование
+- Обработка ошибок, валидация путей и данных
+- PEP 8, модульная структура
