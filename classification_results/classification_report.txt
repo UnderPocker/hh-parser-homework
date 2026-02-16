@@ -1,0 +1,22 @@
+Classification Report
+==================================================
+
+              precision    recall  f1-score   support
+
+      junior       0.79      0.75      0.77      3488
+      middle       0.11      0.26      0.15       449
+      senior       0.00      0.00      0.00       507
+
+    accuracy                           0.62      4444
+   macro avg       0.30      0.34      0.31      4444
+weighted avg       0.63      0.62      0.62      4444
+
+
+Confusion Matrix
+==================================================
+
+[[2626  862    0]
+ [ 331  118    0]
+ [ 374  133    0]]
+
+Labels: junior, middle, senior
